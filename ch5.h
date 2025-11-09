@@ -5,6 +5,9 @@
 #define MAXLINES    5000    /* max #lines to be sorted */
 #define MAXLEN      1000    /* maximum length of any input line */
 
+#define MAXTOKEN    1000
+enum { NAME, PARENS, BRACKETS };
+
 void swap_v2(int *px, int *py);
 int getint(int *pn);
 void print_int_array(int v[], int n);
@@ -36,5 +39,11 @@ int sort_input_lines(int argc, char *argv[]);
 void qsort_v3(void *v[], int left, int right, int (*comp)(void *, void *));
 void swap_v4(void *v[], int i, int j);
 int numcmp(const char *s1, const char *s2);
+
+void dcl(void);
+void dirdcl(void);
+int gettoken(void);
+int undcl(void);
+void complicated_declarations(void);
 
 #endif
