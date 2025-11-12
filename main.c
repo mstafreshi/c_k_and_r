@@ -1,11 +1,11 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
-#include "ch5.h"
-#include "ch4.h"
+#include "ch6.h"
 
 int
 main(int argc, char *argv[])
 {
-    complicated_declarations();
+    count_c_language_keywords();
     return 0;
 }
