@@ -87,7 +87,7 @@ getword(char *word, int limit)
 
 /* count_c_language_keywords */
 void
-count_c_language_keywords(void)
+count_c_language_keywords_v1(void)
 {
     int n, nkeys;
     char word[MAXWORD];
@@ -101,4 +101,43 @@ count_c_language_keywords(void)
         if (keytab[n].count > 0)
             printf("%4d %s\n",
                 keytab[n].count, keytab[n].word);
+}
+
+/* binsearch_v3: find word in tab[0]...tab[n-1] */
+struct key *
+binsearch_v3(char *word, struct key *tab, int n)
+{
+    int cond;
+    struct key *low = &tab[0];
+    struct key *high = &tab[n];
+    struct key *mid;
+
+    while (low < high) {
+        mid = low + (high - low) / 2;
+        if ((cond = strcmp(word, mid->word)) < 0)
+            high = mid;
+        else if (cond > 0)
+            low = mid + 1;
+        else
+            return mid;
+    }
+    return NULL;
+}
+
+/* count_c_language_keywords_v2 */
+void
+count_c_language_keywords_v2(void)
+{
+    char word[MAXWORD];
+    struct key *p;
+    int nkeys;
+
+    nkeys = sizeof(keytab) / sizeof(keytab[0]);
+    while (getword(word, MAXWORD) != EOF)
+        if (isalpha(word[0]))
+            if ((p = binsearch_v3(word, keytab, nkeys)) != NULL)
+                p->count++;
+    for (p = keytab; p < keytab + nkeys; p++)
+        if (p->count > 0)
+            printf("%4d %s\n", p->count, p->word);
 }
