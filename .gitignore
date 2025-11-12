@@ -1,6 +1,7 @@
 *.swp
 *.out
 test.c
+*.txt
 
 # Prerequisites
 *.d

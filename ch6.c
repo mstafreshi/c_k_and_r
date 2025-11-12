@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include "ch4.h"
 #include "ch6.h"
 
@@ -38,6 +39,8 @@ struct key keytab[] = {
     "volatile", 0,
     "while", 0
 };
+
+static struct nlist *hashtab[HASHSIZE];     /* pointer table */
 
 /* binsearch_v2: find word in tab[0]...tab[n-1] */
 int
@@ -140,4 +143,98 @@ count_c_language_keywords_v2(void)
     for (p = keytab; p < keytab + nkeys; p++)
         if (p->count > 0)
             printf("%4d %s\n", p->count, p->word);
+}
+
+/* addtree: add a node with w, at or below p */
+struct tnode *
+addtree(struct tnode *p, char *w)
+{
+    int cond;
+
+    if (p == NULL) {        /* a new word has arrived */
+        p = talloc();       /* make a new node */
+        p->word = strdup_v1(w);
+        p->count = 1;
+        p->left = p->right = NULL;
+    } else if ((cond = strcmp(w, p->word)) == 0)
+        p->count++;         /* repeated word */
+    else if (cond < 0)      /* less than into left subtree */
+        p->left = addtree(p->left, w);
+    else                    /* greater than into right subtree */
+        p->right = addtree(p->right, w);
+    return p;
+}
+
+/* treeprint: in-order print of tree p */
+void
+treeprint(struct tnode *p)
+{
+    if (p != NULL) {
+        treeprint(p->left);
+        printf("%4d %s\n", p->count, p->word);
+        treeprint(p->right);
+    }
+}
+
+/* talloc: make a tnode */
+struct tnode *
+talloc(void)
+{
+    return (struct tnode *) malloc(sizeof(struct tnode));
+}
+
+/* strdup_v1: make a duuplicate of s */
+char *
+strdup_v1(char *s)
+{
+    char *p;
+
+    p = (char *) malloc(strlen(s) + 1);     /* +1 for '\0' */
+    if (p != NULL)
+        strcpy(p, s);
+    return p;
+}
+
+/* hash: form hash value for string s */
+unsigned
+hash(char *s)
+{
+    unsigned hashval;
+
+    for (hashval = 0; *s != '\0'; s++)
+        hashval = *s + 31 * hashval;
+    return hashval % HASHSIZE;
+}
+
+/* lookup: look for s in hashtab */
+struct nlist *
+lookup(char *s)
+{
+    struct nlist *np;
+
+    for (np = hashtab[hash(s)]; np != NULL; np = np->next)
+        if (strcmp(s, np->name) == 0)
+            return np;      /* found */
+    return NULL;            /* not found */
+}
+
+/* install: put (name, defn) in hashtab */
+struct nlist *
+install(char *name, char *defn)
+{
+    struct nlist *np;
+    unsigned hashval;
+
+    if ((np = lookup(name)) == NULL) {      /* not found */
+        np = (struct nlist *) malloc(sizeof(*np));
+        if (np == NULL || (np->name = strdup_v1(name)) == NULL)
+            return NULL;
+        hashval = hash(name);
+        np->next = hashtab[hashval];
+        hashtab[hashval] = np;
+    } else      /* already there */
+        free((void *) np->defn);    /* free previous defn */
+    if ((np->defn = strdup_v1(defn)) == NULL)
+        return NULL;
+    return np;
 }
