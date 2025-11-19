@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "ch7.h"
 
@@ -136,13 +137,14 @@ cat_v1(int argc, char *argv[])
 {
     FILE *fp;
     int n = 0;          /* number of characters printed */
+    char *prog = argv[0];   /* program name for errors */
     
     if (argc == 1)      /* no args; copy standard input */
         n = filecopy(stdin, stdout);
     else
         while (--argc > 0) {
             if ((fp = fopen(*++argv, "r")) == NULL) {
-                printf("cat: can't open %s\n", *argv);
+                fprintf(stderr, "%s: can't open %s\n", prog, *argv);
                 exit(1);
             } else {
                 n += filecopy(fp, stdout);
@@ -150,4 +152,50 @@ cat_v1(int argc, char *argv[])
             }
         }
     return n;
+}
+
+void
+check_errors_test(void)
+{
+    FILE *fp;
+    
+    fp = fopen("fsferfe3.txt", "r");
+    if (! fp)
+        perror(NULL);
+}
+
+/* fgets_v1: get at most n chars from iop */
+char *
+fgets_v1(char *s, int n, FILE *iop)
+{
+    register int c;
+    register char *cs;
+    
+    cs = s;
+    while (--n > 0 && (c = getc(iop)) != EOF)
+        if ((*cs++ = c) == '\n')
+            break;
+    *cs = '\0';
+    return (c == EOF && cs == s) ? NULL : s;
+}
+
+/* fputs: put string s on file iop */
+int
+fputs_v1(char *s, FILE *iop)
+{
+    int c;
+    
+    while (c = *s++)
+        putc(c, iop);
+    return ferror(iop) ? EOF : 0;
+}
+
+/* getline_v3: read a line, return length */
+int
+getline_v3(char *line, int max)
+{
+    if (fgets_v1(line, max, stdin) == NULL)
+        return 0;
+    else
+        return strlen(line);    
 }
